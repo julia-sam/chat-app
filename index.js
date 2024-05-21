@@ -23,14 +23,14 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('New client connected');
+  console.log('New client connected:', socket.id);
+
+  socket.on('message', (data) => {
+    io.emit('message', { content: data.content, id: socket.id });
+  });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-  });
-
-  socket.on('message', (data) => {
-    io.emit('message', data); 
   });
 });
 
