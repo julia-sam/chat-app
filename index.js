@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
+const { Message } = require('./db'); 
 
 const app = express();
 const server = http.createServer(app);
@@ -22,11 +23,20 @@ app.get('/', (req, res) => {
   res.send('Chat App Backend');
 });
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('New client connected:', socket.id);
 
-  socket.on('message', (data) => {
-    io.emit('message', { content: data.content, id: socket.id });
+  const messages = await Message.findAll();
+  socket.emit('loadMessages', messages);
+
+  socket.on('message', async (data) => {
+    const message = await Message.create({
+      content: data.content,
+      clientId: socket.id,
+      sent: true 
+    });
+
+    io.emit('message', { content: message.content, id: socket.id });
   });
 
   socket.on('disconnect', () => {
